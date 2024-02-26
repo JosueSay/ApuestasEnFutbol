@@ -588,6 +588,112 @@ WHERE
     rg.rank_vc = 1
 ORDER BY rg.max_probabilidad_vc DESC;
 
+-- INCISO 6
+
+SELECT
+    players.name,
+    teams.name AS team_name,
+    leagues.name AS league_name,
+    games.season,
+    SUM(appearances.goals) AS total_goals,
+    SUM(appearances.shots) AS total_shots,
+    SUM(appearances.keypasses) AS total_keypasses,
+    SUM(appearances.assists) AS total_assists
+FROM
+    players
+JOIN
+    appearances ON appearances.playerid = players.playerid
+JOIN
+    games ON appearances.gameid = games.gameid
+JOIN
+    leagues ON games.leagueid = leagues.leagueid
+LEFT JOIN (
+    SELECT
+        appearances.gameid,
+        appearances.playerid,
+        CASE
+            WHEN games.hometeamid = teams.teamid THEN teams.name
+            WHEN games.awayteamid = teams.teamid THEN teams.name
+            ELSE 'Unknown'
+        END AS team_name
+    FROM
+        appearances
+    JOIN
+        games ON appearances.gameid = games.gameid
+    LEFT JOIN
+        teams ON games.hometeamid = teams.teamid OR games.awayteamid = teams.teamid
+) AS player_teams ON appearances.gameid = player_teams.gameid AND appearances.playerid = player_teams.playerid
+LEFT JOIN
+    teams ON player_teams.team_name = teams.name
+GROUP BY
+    players.name, teams.name, leagues.name, games.season
+ORDER BY
+    total_goals DESC, total_shots DESC, total_keypasses DESC, total_assists DESC
+LIMIT 35; -- El limite se puede variar para ver N cantidad de respuestas
+
+-- INCISO 7
+-- Rendimiento promedio de cada equipo basado en goles y goles esperados
+
+SELECT
+    t.name,
+    ts.location,
+    AVG(ts.goals) AS Goles,
+    AVG(NULLIF(ts.xgoals::float,0)) AS Goles_Esperados,
+    AVG(ts.goals) - AVG(NULLIF(ts.xgoals::float,0)) AS Diferencia
+FROM
+    teams AS t
+LEFT JOIN
+    teamstats AS ts ON t.teamid = ts.teamid
+GROUP BY
+    t.name,
+    ts.location
+ORDER BY
+    Goles DESC,
+    Goles_Esperados DESC
+LIMIT 10;
+
+-- INCISO 8
+SELECT 
+    liga,
+    equipo,
+    goles,
+    tiros,
+    tiro_al_arco,
+    temporada,
+    victorias
+FROM 
+    (SELECT 
+        liga,
+        equipo,
+        goles,
+        tiros,
+        tiro_al_arco,
+        temporada,
+        victorias,
+        ROW_NUMBER() OVER (PARTITION BY liga, temporada ORDER BY victorias DESC) AS row_num
+    FROM 
+        (SELECT 
+            leagues.name AS liga,
+            teams.name AS equipo,
+            SUM(teamstats.goals) AS goles,
+            SUM(teamstats.shots) AS tiros,
+            SUM(teamstats.shotsontarget) AS tiro_al_arco,
+            teamstats.season AS temporada,
+            COUNT(*) FILTER (WHERE teamstats.result = 'W') AS victorias
+        FROM 
+            teamstats
+        JOIN 
+            games ON teamstats.gameid = games.gameid
+        JOIN 
+            leagues ON leagues.leagueid = games.leagueid
+        JOIN 
+            teams ON teams.teamid = teamstats.teamid
+        GROUP BY 
+            leagues.name, teams.name, teamstats.season) AS victorias_por_equipo
+    ) AS ranked
+WHERE 
+    row_num = 1;
+
 -- INCISO 9
 /*
 	Probabilidad de ganar en cada temporada según el valor máximo de apuesta en la casa B365
@@ -627,4 +733,38 @@ JOIN teams ta ON rg.awayteamid = ta.teamid
 WHERE
     rg.rank_season = 1
 ORDER BY 1;
+
+-- INCISO 10
+-- Equipos más limpios
+SELECT 
+    teams.name AS nombre_equipo,
+    SUM(teamstats.fouls) AS faltas,
+    SUM(teamstats.yellowcards) AS tarjetas_amarillas,
+    SUM(teamstats.redcards) AS tarjetas_rojas
+FROM 
+    teams
+INNER JOIN 
+    teamstats ON teams.teamid = teamstats.teamid
+GROUP BY 
+    teams.name
+ORDER BY 
+    faltas ASC, tarjetas_amarillas ASC, tarjetas_rojas ASC
+LIMIT 10;
+
+-- Equipos más sucios
+SELECT 
+    teams.name AS nombre_equipo,
+    SUM(teamstats.fouls) AS faltas,
+    SUM(teamstats.yellowcards) AS tarjetas_amarillas,
+    SUM(teamstats.redcards) AS tarjetas_rojas
+FROM 
+    teams
+INNER JOIN 
+    teamstats ON teams.teamid = teamstats.teamid
+GROUP BY 
+    teams.name
+ORDER BY 
+    faltas DESC, tarjetas_amarillas DESC, tarjetas_rojas DESC
+LIMIT 10;
+
 
