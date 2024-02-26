@@ -2,6 +2,10 @@
 
 ¡Bienvenido/a a ApuestasEnFutbol! Este proyecto utiliza tecnologías de bases de datos para la creación y carga de modelos de datos, con el objetivo de utilizar lenguaje SQL para investigación, desarrollo y presentación de resultados sobre preguntas de negocio para apoyo de toma de decisiones.
 
+## Enlace a repositorio
+{"icon":{"category":"Logos","commonName":"git","id":"20906","name":"Git","platform":"color","isFree":true,"isColor":true,"isExplicit":false,"authorId":"","authorName":"icons8","sourceFormat":"svg"},"id":"20906","svg":null}
+**Enlace:** https://github.com/JosueSay/ApuestasEnFutbol
+
 ## 📋 Descripción del Proyecto
 
 El conjunto de datos a utilizar son archivos en formato CSV. Estos archivos contienen información detallada sobre todos los juegos de fútbol de las cinco principales ligas europeas entre las temporadas de 2014 a 2020 (7 años), así como información de los jugadores y sus características.
