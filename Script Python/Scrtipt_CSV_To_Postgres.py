@@ -64,11 +64,11 @@ def crear_tabla_desde_csv(connection, tabla_nombre, ruta_csv):
 
 # Configuración de la base de datos
 db_config = {
-    'user': 'postgres',
-    'password': 'BDpassWord@1',
-    'host': 'localhost',
-    'port': '5432',
-    'database': 'ApuestasFutbolPG'
+    'user': 'user_bd',
+    'password': 'password_bd',
+    'host': 'host_bd',
+    'port': 'puerto_bd',
+    'database': 'nombre_bd'
 }
 
 # Carpeta de archivos csv
